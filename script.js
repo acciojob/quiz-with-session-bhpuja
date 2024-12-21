@@ -1,99 +1,112 @@
-// Questions Data
+// Sample quiz data
 const questions = [
   {
     question: "What is the capital of France?",
-    options: ["Berlin", "Madrid", "Paris", "Lisbon"],
-    correct: 2
+    options: ["Paris", "London", "Berlin", "Madrid"],
+    correct: "Paris"
   },
   {
-    question: "Which is the largest planet in our solar system?",
-    options: ["Earth", "Jupiter", "Mars", "Venus"],
-    correct: 1
+    question: "What is 2 + 2?",
+    options: ["3", "4", "5", "6"],
+    correct: "4"
   },
   {
-    question: "What is the boiling point of water?",
-    options: ["90°C", "100°C", "120°C", "80°C"],
-    correct: 1
+    question: "Which planet is known as the Red Planet?",
+    options: ["Earth", "Mars", "Jupiter", "Saturn"],
+    correct: "Mars"
   },
   {
-    question: "Who wrote 'Hamlet'?",
-    options: ["Charles Dickens", "J.K. Rowling", "William Shakespeare", "Mark Twain"],
-    correct: 2
+    question: "Who wrote 'To Kill a Mockingbird'?",
+    options: ["Harper Lee", "J.K. Rowling", "Jane Austen", "Mark Twain"],
+    correct: "Harper Lee"
   },
   {
-    question: "Which is the smallest prime number?",
-    options: ["0", "1", "2", "3"],
-    correct: 2
+    question: "What is the largest ocean on Earth?",
+    options: ["Atlantic", "Indian", "Arctic", "Pacific"],
+    correct: "Pacific"
   }
 ];
 
-const quizContainer = document.getElementById("quiz-container");
-const submitBtn = document.getElementById("submit-btn");
-const scoreDisplay = document.getElementById("score-display");
-
-// Load saved progress from session storage
-const savedProgress = JSON.parse(sessionStorage.getItem("progress")) || {};
-
-// Function to render the quiz
-function renderQuiz() {
-  quizContainer.innerHTML = ""; // Clear existing content
+// Function to load questions
+function loadQuestions() {
+  const container = document.getElementById("questions-container");
 
   questions.forEach((q, index) => {
     const questionDiv = document.createElement("div");
     questionDiv.classList.add("question");
 
-    const questionText = document.createElement("p");
-    questionText.textContent = `${index + 1}. ${q.question}`;
-    questionDiv.appendChild(questionText);
+    const questionTitle = document.createElement("p");
+    questionTitle.textContent = q.question;
 
-    q.options.forEach((option, optionIndex) => {
-      const optionLabel = document.createElement("label");
-      const optionInput = document.createElement("input");
-      optionInput.type = "radio";
-      optionInput.name = `question-${index}`;
-      optionInput.value = optionIndex;
+    // Create options
+    q.options.forEach((option, i) => {
+      const label = document.createElement("label");
+      label.textContent = option;
+      
+      const input = document.createElement("input");
+      input.type = "radio";
+      input.name = `question-${index}`;
+      input.value = option;
 
-      // Restore selected option if progress exists
-      if (savedProgress[`question-${index}`] == optionIndex) {
-        optionInput.checked = true;
+      // Check if there's a saved progress
+      const savedAnswer = sessionStorage.getItem(`question-${index}`);
+      if (savedAnswer === option) {
+        input.checked = true;
       }
 
-      // Save progress to session storage on selection
-      optionInput.addEventListener("change", () => {
-        savedProgress[`question-${index}`] = optionIndex;
-        sessionStorage.setItem("progress", JSON.stringify(savedProgress));
-      });
-
-      optionLabel.appendChild(optionInput);
-      optionLabel.append(` ${option}`);
-      questionDiv.appendChild(optionLabel);
+      label.prepend(input);
+      questionDiv.appendChild(label);
       questionDiv.appendChild(document.createElement("br"));
     });
 
-    quizContainer.appendChild(questionDiv);
+    container.appendChild(questionDiv);
   });
 }
 
-// Function to calculate and display the score
-function calculateScore() {
-  let score = 0;
+// Function to handle form submission
+function handleSubmit(event) {
+  event.preventDefault();
 
+  let score = 0;
   questions.forEach((q, index) => {
-    const selectedOption = savedProgress[`question-${index}`];
-    if (selectedOption == q.correct) {
+    const selectedOption = document.querySelector(`input[name="question-${index}"]:checked`);
+    const answer = selectedOption ? selectedOption.value : null;
+
+    // Save the progress in session storage
+    sessionStorage.setItem(`question-${index}`, answer);
+
+    // Check if the answer is correct
+    if (answer === q.correct) {
       score++;
     }
   });
 
-  // Display the score
-  scoreDisplay.textContent = `Your score is ${score} out of ${questions.length}.`;
-
-  // Save the score to local storage
+  // Save score to localStorage
   localStorage.setItem("score", score);
+
+  // Display the result
+  const resultDiv = document.getElementById("result");
+  resultDiv.textContent = `Your score is ${score} out of 5.`;
+
+  // Disable the submit button after submission
+  document.querySelector("button").disabled = true;
 }
 
-// Event listener for submit button
-submitBtn.addEventListener("click", calculateScore);
+// Load saved score from local storage (if available)
+function loadPreviousScore() {
+  const storedScore = localStorage.getItem("score");
+  if (storedScore) {
+    const resultDiv = document.getElementById("result");
+    resultDiv.textContent = `Your last score was ${storedScore} out of 5.`;
+  }
+}
 
-// Initialize the quiz
-renderQuiz();
+// Initial loading of questions and previous score
+window.onload = () => {
+  loadQuestions();
+  loadPreviousScore();
+
+  // Event listener for form submission
+  document.getElementById("quiz-form").addEventListener("submit", handleSubmit);
+};
+
