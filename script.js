@@ -110,3 +110,4 @@ window.onload = () => {
   document.getElementById("quiz-form").addEventListener("submit", handleSubmit);
 };
 
+

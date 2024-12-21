@@ -1,6 +1,6 @@
-/*  your css code here. If applicable */
 body {
   font-family: Arial, sans-serif;
+  padding: 20px;
 }
 
 h1 {
@@ -39,3 +39,4 @@ button:hover {
   margin-top: 20px;
   text-align: center;
 }
+
