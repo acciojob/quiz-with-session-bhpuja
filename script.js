@@ -1,113 +1,101 @@
 // Sample quiz data
+// Quiz questions
 const questions = [
-  {
-    question: "What is the capital of France?",
-    options: ["Paris", "London", "Berlin", "Madrid"],
-    correct: "Paris"
-  },
-  {
-    question: "What is 2 + 2?",
-    options: ["3", "4", "5", "6"],
-    correct: "4"
-  },
-  {
-    question: "Which planet is known as the Red Planet?",
-    options: ["Earth", "Mars", "Jupiter", "Saturn"],
-    correct: "Mars"
-  },
-  {
-    question: "Who wrote 'To Kill a Mockingbird'?",
-    options: ["Harper Lee", "J.K. Rowling", "Jane Austen", "Mark Twain"],
-    correct: "Harper Lee"
-  },
-  {
-    question: "What is the largest ocean on Earth?",
-    options: ["Atlantic", "Indian", "Arctic", "Pacific"],
-    correct: "Pacific"
-  }
+    {
+        question: "What is the capital of France?",
+        options: ["Berlin", "Madrid", "Paris", "Rome"],
+        answer: 2, // Correct answer index
+    },
+    {
+        question: "Which planet is known as the Red Planet?",
+        options: ["Earth", "Mars", "Jupiter", "Venus"],
+        answer: 1,
+    },
+    {
+        question: "Who wrote 'Hamlet'?",
+        options: ["Charles Dickens", "William Shakespeare", "Mark Twain", "Jane Austen"],
+        answer: 1,
+    },
+    {
+        question: "What is the largest mammal?",
+        options: ["Elephant", "Blue Whale", "Giraffe", "Orca"],
+        answer: 1,
+    },
+    {
+        question: "Which gas do plants primarily use for photosynthesis?",
+        options: ["Oxygen", "Carbon Dioxide", "Nitrogen", "Hydrogen"],
+        answer: 1,
+    },
 ];
 
-// Function to load questions
-function loadQuestions() {
-  const container = document.getElementById("questions-container");
+const quizContainer = document.getElementById("quiz-container");
+const submitBtn = document.getElementById("submit-btn");
+const scoreDisplay = document.getElementById("score-display");
 
-  questions.forEach((q, index) => {
-    const questionDiv = document.createElement("div");
-    questionDiv.classList.add("question");
+// Load progress from session storage
+const progress = JSON.parse(sessionStorage.getItem("progress")) || {};
 
-    const questionTitle = document.createElement("p");
-    questionTitle.textContent = q.question;
+// Render the quiz
+function renderQuiz() {
+    quizContainer.innerHTML = "";
+    questions.forEach((q, index) => {
+        const questionDiv = document.createElement("div");
+        questionDiv.classList.add("question");
 
-    // Create options
-    q.options.forEach((option, i) => {
-      const label = document.createElement("label");
-      label.textContent = option;
-      
-      const input = document.createElement("input");
-      input.type = "radio";
-      input.name = `question-${index}`;
-      input.value = option;
+        const questionText = document.createElement("p");
+        questionText.textContent = `${index + 1}. ${q.question}`;
+        questionDiv.appendChild(questionText);
 
-      // Check if there's a saved progress
-      const savedAnswer = sessionStorage.getItem(`question-${index}`);
-      if (savedAnswer === option) {
-        input.checked = true;
-      }
+        const optionsDiv = document.createElement("div");
+        optionsDiv.classList.add("options");
 
-      label.prepend(input);
-      questionDiv.appendChild(label);
-      questionDiv.appendChild(document.createElement("br"));
+        q.options.forEach((option, optionIndex) => {
+            const label = document.createElement("label");
+            const input = document.createElement("input");
+            input.type = "radio";
+            input.name = `question-${index}`;
+            input.value = optionIndex;
+
+            // Persist the selected option
+            if (progress[index] === optionIndex) {
+                input.checked = true;
+            }
+
+            // Save progress to session storage
+            input.addEventListener("change", () => {
+                progress[index] = optionIndex;
+                sessionStorage.setItem("progress", JSON.stringify(progress));
+            });
+
+            label.appendChild(input);
+            label.append(option);
+            optionsDiv.appendChild(label);
+        });
+
+        questionDiv.appendChild(optionsDiv);
+        quizContainer.appendChild(questionDiv);
     });
-
-    container.appendChild(questionDiv);
-  });
 }
 
-// Function to handle form submission
-function handleSubmit(event) {
-  event.preventDefault();
-
-  let score = 0;
-  questions.forEach((q, index) => {
-    const selectedOption = document.querySelector(`input[name="question-${index}"]:checked`);
-    const answer = selectedOption ? selectedOption.value : null;
-
-    // Save the progress in session storage
-    sessionStorage.setItem(`question-${index}`, answer);
-
-    // Check if the answer is correct
-    if (answer === q.correct) {
-      score++;
-    }
-  });
-
-  // Save score to localStorage
-  localStorage.setItem("score", score);
-
-  // Display the result
-  const resultDiv = document.getElementById("result");
-  resultDiv.textContent = `Your score is ${score} out of 5.`;
-
-  // Disable the submit button after submission
-  document.querySelector("button").disabled = true;
+// Calculate score
+function calculateScore() {
+    let score = 0;
+    questions.forEach((q, index) => {
+        if (progress[index] === q.answer) {
+            score++;
+        }
+    });
+    return score;
 }
 
-// Load saved score from local storage (if available)
-function loadPreviousScore() {
-  const storedScore = localStorage.getItem("score");
-  if (storedScore) {
-    const resultDiv = document.getElementById("result");
-    resultDiv.textContent = `Your last score was ${storedScore} out of 5.`;
-  }
-}
+// Handle submit
+submitBtn.addEventListener("click", () => {
+    const score = calculateScore();
+    scoreDisplay.textContent = `Your score is ${score} out of ${questions.length}.`;
 
-// Initial loading of questions and previous score
-window.onload = () => {
-  loadQuestions();
-  loadPreviousScore();
+    // Save score to local storage
+    localStorage.setItem("score", score);
+});
 
-  // Event listener for form submission
-  document.getElementById("quiz-form").addEventListener("submit", handleSubmit);
-};
-
-
+// Render the quiz on page load
+renderQuiz();
